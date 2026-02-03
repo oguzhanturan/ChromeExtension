@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=400" />
+  <title>Tab Group Share</title>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="header__title">Tab Group Share</h1>
+      <nav class="header__nav">
+        <button class="nav-btn nav-btn--active" data-view="share">Share</button>
+        <button class="nav-btn" data-view="import">Import</button>
+      </nav>
+    </header>
+
+    <section id="view-share" class="view">
+      <div id="groups-list" class="groups-list"></div>
+      <div id="empty-state" class="empty-state" hidden>
+        <p>No tab groups found in this window.</p>
+        <p class="empty-state__hint">Create a tab group in Chrome, then come back here to share it.</p>
+      </div>
+    </section>
+
+    <section id="view-import" class="view" hidden>
+      <label for="import-input" class="label">Paste a share code:</label>
+      <textarea
+        id="import-input"
+        class="import-textarea"
+        placeholder="tgs:eyJ2ZXJzaW9uIjox..."
+        rows="4"
+      ></textarea>
+      <button id="import-btn" class="btn btn--primary btn--full">Import Tab Group</button>
+    </section>
+
+    <section id="share-result" class="share-result" hidden>
+      <button id="share-result-close" class="share-result__close">&times;</button>
+      <h2 class="share-result__title">Share Code</h2>
+      <textarea id="share-output" class="share-output" readonly rows="4"></textarea>
+      <button id="copy-btn" class="btn btn--primary btn--full">Copy to Clipboard</button>
+      <p id="copy-feedback" class="copy-feedback" hidden>Copied!</p>
+    </section>
+
+    <div id="toast" class="toast" hidden></div>
+  </div>
+</body>
+</html>
