@@ -7,6 +7,7 @@ module.exports = {
   entry: {
     popup: './src/popup/popup.ts',
     'service-worker': './src/background/service-worker.ts',
+    offscreen: './src/offscreen/offscreen.ts',
   },
 
   output: {
@@ -42,6 +43,12 @@ module.exports = {
 
     new MiniCssExtractPlugin({
       filename: 'popup.css',
+    }),
+
+    new HtmlWebpackPlugin({
+      template: './src/offscreen/offscreen.html',
+      filename: 'offscreen.html',
+      chunks: ['offscreen'],
     }),
 
     new CopyWebpackPlugin({

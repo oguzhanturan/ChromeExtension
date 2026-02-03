@@ -1,11 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Tab Group Share",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Share and import Chrome Tab Groups with a single code.",
   "permissions": [
     "tabGroups",
-    "tabs"
+    "tabs",
+    "contextMenus",
+    "offscreen"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -24,5 +26,14 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "minimum_chrome_version": "89"
+  "commands": {
+    "share-current-group": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+E"
+      },
+      "description": "Share current tab's group to clipboard"
+    }
+  },
+  "minimum_chrome_version": "109"
 }
