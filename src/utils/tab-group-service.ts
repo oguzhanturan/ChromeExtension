@@ -1,5 +1,11 @@
 import { DisplayTabGroup, SharePayload } from '../types/tab-group';
 
+export interface ImportResult {
+  groupId: number;
+  created: number;
+  failed: number;
+}
+
 export async function getAllTabGroups(): Promise<DisplayTabGroup[]> {
   const groups = await chrome.tabGroups.query({
     windowId: chrome.windows.WINDOW_ID_CURRENT,
@@ -46,20 +52,27 @@ export function buildSharePayload(group: DisplayTabGroup): SharePayload {
   };
 }
 
-export async function importTabGroup(payload: SharePayload): Promise<number> {
+export async function importTabGroup(payload: SharePayload): Promise<ImportResult> {
   if (payload.tabs.length === 0) {
     throw new Error('Cannot import an empty tab group.');
   }
 
-  const createdTabs = await Promise.all(
+  const results = await Promise.allSettled(
     payload.tabs.map((tab) =>
       chrome.tabs.create({ url: tab.url, active: false })
     )
   );
 
-  const tabIds = createdTabs
-    .map((t) => t.id)
-    .filter((id): id is number => id !== undefined);
+  const tabIds: number[] = [];
+  let failed = 0;
+
+  for (const result of results) {
+    if (result.status === 'fulfilled' && result.value.id !== undefined) {
+      tabIds.push(result.value.id);
+    } else {
+      failed++;
+    }
+  }
 
   if (tabIds.length === 0) {
     throw new Error('Failed to create any tabs.');
@@ -73,5 +86,5 @@ export async function importTabGroup(payload: SharePayload): Promise<number> {
     collapsed: false,
   });
 
-  return groupId;
+  return { groupId, created: tabIds.length, failed };
 }
