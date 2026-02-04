@@ -20,22 +20,27 @@ const retryBtn = document.getElementById('retry-btn')!;
 const refreshBtn = document.getElementById('refresh-btn')!;
 const importInput = document.getElementById('import-input') as HTMLTextAreaElement;
 const importBtn = document.getElementById('import-btn')!;
+const importPreview = document.getElementById('import-preview')!;
 const shareResult = document.getElementById('share-result')!;
-const shareResultTitle = document.getElementById('share-result-title')!;
-const shareResultColor = document.getElementById('share-result-color')!;
+const shareResultChip = document.getElementById('share-result-chip')!;
 const shareOutput = document.getElementById('share-output') as HTMLTextAreaElement;
 const copyBtn = document.getElementById('copy-btn')!;
 const copyFeedback = document.getElementById('copy-feedback')!;
 const closeBtn = document.getElementById('share-result-close')!;
 const toast = document.getElementById('toast')!;
 const navBtns = document.querySelectorAll<HTMLButtonElement>('.nav-btn');
+const shortcutHint = document.getElementById('shortcut-hint')!;
 
 let toastTimeout: ReturnType<typeof setTimeout> | null = null;
 
-// SVG share icon template
+// SVG share icon (14x14)
 const SHARE_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none">
   <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" fill="currentColor"/>
 </svg>`;
+
+// Detect platform for shortcut hint
+const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+shortcutHint.textContent = isMac ? '\u2318\u21E7E to share \u00B7 v1.1.0' : 'Ctrl+Shift+S to share \u00B7 v1.1.0';
 
 // View Navigation
 navBtns.forEach((btn) => {
@@ -84,34 +89,58 @@ function createGroupCard(group: DisplayTabGroup): HTMLElement {
   const card = document.createElement('div');
   card.className = 'group-card';
 
-  const colorDot = document.createElement('span');
-  colorDot.className = 'group-card__color';
-  colorDot.style.background = TAB_GROUP_COLOR_MAP[group.color];
-
+  // Info section
   const info = document.createElement('div');
   info.className = 'group-card__info';
 
-  const name = document.createElement('div');
-  name.className = 'group-card__name';
-  name.textContent = group.title;
+  // Chrome-style chip
+  const chip = document.createElement('span');
+  chip.className = 'group-chip';
+  chip.style.backgroundColor = TAB_GROUP_COLOR_MAP[group.color];
 
-  const count = document.createElement('div');
-  count.className = 'group-card__count';
-  count.textContent = `${group.tabCount} tab${group.tabCount !== 1 ? 's' : ''}`;
+  const chipName = document.createElement('span');
+  chipName.className = 'group-chip__name';
+  chipName.textContent = group.title;
 
-  info.appendChild(name);
-  info.appendChild(count);
+  const chipCount = document.createElement('span');
+  chipCount.className = 'group-chip__count';
+  chipCount.textContent = `\u00B7 ${group.tabCount}`;
 
+  chip.appendChild(chipName);
+  chip.appendChild(chipCount);
+
+  info.appendChild(chip);
+
+  // Tab preview line
+  if (group.tabs.length > 0) {
+    const preview = document.createElement('div');
+    preview.className = 'group-card__preview';
+    const titles = group.tabs.slice(0, 3).map((t) => extractDomain(t.url) || t.title);
+    const suffix = group.tabs.length > 3 ? ', ...' : '';
+    preview.textContent = titles.join(', ') + suffix;
+    info.appendChild(preview);
+  }
+
+  // Share button (icon-only)
   const shareBtn = document.createElement('button');
   shareBtn.className = 'group-card__share';
-  shareBtn.innerHTML = `${SHARE_ICON_SVG}<span>Share</span>`;
+  shareBtn.title = 'Share group';
+  shareBtn.innerHTML = SHARE_ICON_SVG;
   shareBtn.addEventListener('click', () => handleShare(group));
 
-  card.appendChild(colorDot);
   card.appendChild(info);
   card.appendChild(shareBtn);
 
   return card;
+}
+
+function extractDomain(url: string): string {
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
 }
 
 // Share Flow
@@ -125,8 +154,19 @@ function handleShare(group: DisplayTabGroup): void {
 
   const code = encode(payload);
   shareOutput.value = code;
-  shareResultTitle.textContent = group.title;
-  shareResultColor.style.background = TAB_GROUP_COLOR_MAP[group.color];
+
+  // Render chip in overlay
+  shareResultChip.style.backgroundColor = TAB_GROUP_COLOR_MAP[group.color];
+  shareResultChip.innerHTML = '';
+  const chipName = document.createElement('span');
+  chipName.className = 'group-chip__name';
+  chipName.textContent = group.title;
+  const chipCount = document.createElement('span');
+  chipCount.className = 'group-chip__count';
+  chipCount.textContent = `\u00B7 ${payload.tabs.length} tabs`;
+  shareResultChip.appendChild(chipName);
+  shareResultChip.appendChild(chipCount);
+
   shareResult.hidden = false;
   copyFeedback.hidden = true;
 }
@@ -148,6 +188,45 @@ closeBtn.addEventListener('click', () => {
 });
 
 // Import Flow
+importInput.addEventListener('input', () => {
+  const code = importInput.value.trim();
+  if (!code) {
+    importPreview.hidden = true;
+    return;
+  }
+  try {
+    const payload = decode(code);
+    // Show preview chip
+    importPreview.hidden = false;
+    importPreview.innerHTML = '';
+
+    const chip = document.createElement('span');
+    chip.className = 'group-chip';
+    chip.style.backgroundColor = TAB_GROUP_COLOR_MAP[payload.color];
+    const name = document.createElement('span');
+    name.className = 'group-chip__name';
+    name.textContent = payload.name;
+    const count = document.createElement('span');
+    count.className = 'group-chip__count';
+    count.textContent = `\u00B7 ${payload.tabs.length} tabs`;
+    chip.appendChild(name);
+    chip.appendChild(count);
+
+    const tabsInfo = document.createElement('span');
+    tabsInfo.className = 'import-preview__tabs';
+    const domains = payload.tabs.slice(0, 3).map((t) => {
+      try { return new URL(t.url).hostname.replace(/^www\./, ''); } catch { return ''; }
+    }).filter(Boolean);
+    const suffix = payload.tabs.length > 3 ? ', ...' : '';
+    tabsInfo.textContent = domains.join(', ') + suffix;
+
+    importPreview.appendChild(chip);
+    importPreview.appendChild(tabsInfo);
+  } catch {
+    importPreview.hidden = true;
+  }
+});
+
 importBtn.addEventListener('click', async () => {
   const code = importInput.value.trim();
   if (!code) {
@@ -180,6 +259,7 @@ importBtn.addEventListener('click', async () => {
       'success'
     );
     importInput.value = '';
+    importPreview.hidden = true;
   } catch (err) {
     showToast(
       err instanceof Error ? err.message : 'Import failed.',

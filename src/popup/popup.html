@@ -8,17 +8,25 @@
   <div class="container">
     <header class="header">
       <div class="header__top">
-        <h1 class="header__title">Tab Group Share</h1>
+        <h1 class="header__title">
+          <svg class="header__icon" width="14" height="14" viewBox="0 0 128 128" fill="none">
+            <rect width="128" height="128" rx="28" fill="#1A73E8"/>
+            <rect x="24" y="30" width="56" height="40" rx="6" fill="white" opacity="0.5"/>
+            <rect x="32" y="38" width="60" height="44" rx="6" fill="white" opacity="0.75"/>
+            <rect x="40" y="46" width="64" height="48" rx="6" fill="white"/>
+          </svg>
+          Tab Group Share
+        </h1>
         <button id="refresh-btn" class="refresh-btn" title="Refresh groups">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M13.65 2.35A7.96 7.96 0 0 0 8 0C3.58 0 .01 3.58.01 8S3.58 16 8 16c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 8 14 6 6 0 1 1 8 2c1.66 0 3.14.69 4.22 1.78L9 7h7V0l-2.35 2.35z" fill="currentColor"/>
           </svg>
         </button>
       </div>
-      <nav class="header__nav">
+      <div class="nav-segment">
         <button class="nav-btn nav-btn--active" data-view="share">Share</button>
         <button class="nav-btn" data-view="import">Import</button>
-      </nav>
+      </div>
     </header>
 
     <section id="view-share" class="view">
@@ -43,23 +51,27 @@
         id="import-input"
         class="import-textarea"
         placeholder="tgs:eyJ2ZXJzaW9uIjox..."
-        rows="4"
+        rows="3"
       ></textarea>
+      <div id="import-preview" class="import-preview" hidden></div>
       <button id="import-btn" class="btn btn--primary btn--full">Import Tab Group</button>
     </section>
 
     <section id="share-result" class="share-result" hidden>
       <button id="share-result-close" class="share-result__close">&times;</button>
       <div class="share-result__header">
-        <span id="share-result-color" class="share-result__color"></span>
-        <h2 id="share-result-title" class="share-result__title">Share Code</h2>
+        <span id="share-result-chip" class="group-chip group-chip--overlay"></span>
       </div>
-      <textarea id="share-output" class="share-output" readonly rows="4"></textarea>
+      <textarea id="share-output" class="share-output" readonly rows="3"></textarea>
       <button id="copy-btn" class="btn btn--primary btn--full">Copy to Clipboard</button>
       <p id="copy-feedback" class="copy-feedback" hidden>Copied!</p>
     </section>
 
     <div id="toast" class="toast" hidden></div>
+
+    <footer class="footer">
+      <span id="shortcut-hint" class="footer__hint"></span>
+    </footer>
   </div>
 </body>
 </html>
