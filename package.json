@@ -1,6 +1,6 @@
 {
   "name": "tab-group-share",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Share and import Chrome Tab Groups with a single code.",
   "private": true,
   "scripts": {

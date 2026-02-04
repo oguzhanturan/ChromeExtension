@@ -1,6 +1,5 @@
 import { SharePayload } from '../types/tab-group';
-
-const SHARE_PREFIX = 'tgs:';
+import { encode } from '../utils/codec';
 const CONTEXT_MENU_ID = 'share-tab-group';
 
 // --- Context Menu Setup ---
@@ -73,21 +72,12 @@ async function shareTabGroup(tab: chrome.tabs.Tab): Promise<void> {
       tabs: shareableTabs,
     };
 
-    const code = encodePayload(payload);
+    const code = encode(payload);
     await copyToClipboard(code);
     showBadge('OK', '#188038');
   } catch {
     showBadge('!', '#D93025');
   }
-}
-
-// --- Encode (duplicated from codec.ts to avoid import issues in SW bundle) ---
-
-function encodePayload(payload: SharePayload): string {
-  const json = JSON.stringify(payload);
-  const bytes = new TextEncoder().encode(json);
-  const latin1 = Array.from(bytes, (b) => String.fromCharCode(b)).join('');
-  return SHARE_PREFIX + btoa(latin1);
 }
 
 // --- Clipboard via Offscreen Document ---

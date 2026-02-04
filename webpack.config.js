@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-module.exports = {
+module.exports = (env, argv) => ({
   entry: {
     popup: './src/popup/popup.ts',
     'service-worker': './src/background/service-worker.ts',
@@ -63,5 +63,5 @@ module.exports = {
     splitChunks: false,
   },
 
-  devtool: 'cheap-module-source-map',
-};
+  devtool: argv.mode === 'development' ? 'cheap-module-source-map' : false,
+});
