@@ -58,7 +58,14 @@
     </section>
 
     <section id="share-result" class="share-result" hidden>
-      <button id="share-result-close" class="share-result__close">&times;</button>
+      <div class="share-result__topbar">
+        <button id="share-result-close" class="share-result__back" title="Back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="currentColor"/>
+          </svg>
+          <span>Back</span>
+        </button>
+      </div>
       <div class="share-result__header">
         <span id="share-result-chip" class="group-chip group-chip--overlay"></span>
       </div>

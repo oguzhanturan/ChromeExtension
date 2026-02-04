@@ -372,26 +372,31 @@ body {
   overflow-y: auto;
 }
 
-.share-result__close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+.share-result__topbar {
+  margin-bottom: 8px;
+}
+
+.share-result__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   border: none;
   background: transparent;
-  font-size: 20px;
-  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
   cursor: pointer;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
+  padding: 4px 8px 4px 4px;
+  border-radius: 6px;
   transition: background 0.15s;
 }
 
-.share-result__close:hover {
-  background: var(--close-hover);
+.share-result__back:hover {
+  background: var(--accent-light);
+}
+
+.share-result__back svg {
+  flex-shrink: 0;
 }
 
 .share-result__header {
