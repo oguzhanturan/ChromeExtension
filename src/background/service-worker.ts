@@ -8,9 +8,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: CONTEXT_MENU_ID,
     title: 'Share this tab group',
-    // 'tab' context shows item when right-clicking a tab in the tab strip (Chrome 133+)
-    // Cast needed because @types/chrome may not include 'tab' yet
-    contexts: ['tab' as chrome.contextMenus.ContextType],
+    contexts: ['page'],
   });
 });
 
