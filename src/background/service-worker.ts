@@ -106,7 +106,15 @@ async function ensureOffscreenDocument(): Promise<void> {
 
 async function copyToClipboard(text: string): Promise<void> {
   await ensureOffscreenDocument();
-  await chrome.runtime.sendMessage({ type: 'copy-to-clipboard', text });
+  // Small delay to ensure offscreen script is loaded
+  await new Promise((r) => setTimeout(r, 50));
+  try {
+    await chrome.runtime.sendMessage({ type: 'copy-to-clipboard', text });
+  } catch {
+    // Retry once if first attempt fails
+    await new Promise((r) => setTimeout(r, 100));
+    await chrome.runtime.sendMessage({ type: 'copy-to-clipboard', text });
+  }
 }
 
 // --- Badge Feedback ---
