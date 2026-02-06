@@ -75,6 +75,8 @@ No accounts, no cloud sync, no tracking - just simple, instant tab group sharing
 
 **offscreen:** Required to copy share codes to clipboard from background service worker
 
+**clipboardWrite:** Required to write share codes to clipboard when using keyboard shortcuts or context menu
+
 ---
 
 ## Gizlilik Politikası

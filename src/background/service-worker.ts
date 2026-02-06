@@ -71,8 +71,12 @@ async function shareTabGroup(tab: chrome.tabs.Tab): Promise<void> {
     };
 
     const code = encode(payload);
-    await copyToClipboard(code);
-    showBadge('OK', '#188038');
+    const copied = await copyToClipboard(code);
+    if (copied) {
+      showBadge('OK', '#188038');
+    } else {
+      showBadge('!', '#D93025');
+    }
   } catch {
     showBadge('!', '#D93025');
   }
@@ -104,17 +108,25 @@ async function ensureOffscreenDocument(): Promise<void> {
   creatingOffscreen = null;
 }
 
-async function copyToClipboard(text: string): Promise<void> {
+async function copyToClipboard(text: string): Promise<boolean> {
   await ensureOffscreenDocument();
   // Small delay to ensure offscreen script is loaded
   await new Promise((r) => setTimeout(r, 50));
+
   try {
-    await chrome.runtime.sendMessage({ type: 'copy-to-clipboard', text });
+    const response = await chrome.runtime.sendMessage({ type: 'copy-to-clipboard', text });
+    if (response?.success) return true;
   } catch {
     // Retry once if first attempt fails
     await new Promise((r) => setTimeout(r, 100));
-    await chrome.runtime.sendMessage({ type: 'copy-to-clipboard', text });
+    try {
+      const response = await chrome.runtime.sendMessage({ type: 'copy-to-clipboard', text });
+      if (response?.success) return true;
+    } catch {
+      // ignore
+    }
   }
+  return false;
 }
 
 // --- Badge Feedback ---
