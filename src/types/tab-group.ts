@@ -4,7 +4,7 @@ export interface SharedTab {
 }
 
 export interface SharePayload {
-  version: 1;
+  version: 1 | 2;
   name: string;
   color: chrome.tabGroups.ColorEnum;
   tabs: SharedTab[];
@@ -17,6 +17,11 @@ export interface DisplayTabGroup {
   tabCount: number;
   tabs: SharedTab[];
 }
+
+// Color enum to index mapping for compact encoding
+export const COLOR_LIST: chrome.tabGroups.ColorEnum[] = [
+  'grey', 'blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange',
+];
 
 export const TAB_GROUP_COLOR_MAP: Record<chrome.tabGroups.ColorEnum, string> = {
   grey: '#5F6368',
