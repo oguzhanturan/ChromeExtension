@@ -6,6 +6,32 @@ export interface ImportResult {
   failed: number;
 }
 
+// Known tracking/analytics params that are safe to remove
+const TRACKING_PARAMS = new Set([
+  'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'utm_id',
+  'gclid', 'gclsrc', 'gad_source', 'gad_campaignid', 'gbraid', 'wbraid', 'dclid',
+  'fbclid', 'fb_action_ids', 'fb_action_types', 'fb_ref',
+  'msclkid',
+  'mc_cid', 'mc_eid',
+  '_ga', '_gl', '_gac',
+  'twclid', 'igshid',
+  'is_sa', 'android-min-version', 'ios-min-version', 'campaign_id',
+]);
+
+function cleanUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    for (const key of [...u.searchParams.keys()]) {
+      if (TRACKING_PARAMS.has(key)) {
+        u.searchParams.delete(key);
+      }
+    }
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 export async function getAllTabGroups(): Promise<DisplayTabGroup[]> {
   const groups = await chrome.tabGroups.query({
     windowId: chrome.windows.WINDOW_ID_CURRENT,
@@ -40,9 +66,9 @@ export async function getAllTabGroups(): Promise<DisplayTabGroup[]> {
 }
 
 export function buildSharePayload(group: DisplayTabGroup): SharePayload {
-  const shareableTabs = group.tabs.filter(
-    (tab) => tab.url.startsWith('http://') || tab.url.startsWith('https://')
-  );
+  const shareableTabs = group.tabs
+    .filter((tab) => tab.url.startsWith('http://') || tab.url.startsWith('https://'))
+    .map((tab) => ({ ...tab, url: cleanUrl(tab.url) }));
 
   return {
     version: 1,

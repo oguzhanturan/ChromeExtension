@@ -18,56 +18,105 @@ interface RawPayloadV1 {
   tabs: { url: string; title: string }[];
 }
 
-export function encode(payload: SharePayload): string {
-  // Always encode to v2 compact format
+// --- Compression helpers (browser built-in, no dependencies) ---
+
+async function compress(data: Uint8Array): Promise<Uint8Array> {
+  const stream = new CompressionStream('deflate-raw');
+  const writer = stream.writable.getWriter();
+  writer.write(new Uint8Array(data));
+  writer.close();
+  const chunks: Uint8Array[] = [];
+  const reader = stream.readable.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  const out = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
+  let offset = 0;
+  for (const chunk of chunks) { out.set(chunk, offset); offset += chunk.length; }
+  return out;
+}
+
+async function decompress(data: Uint8Array): Promise<Uint8Array> {
+  const stream = new DecompressionStream('deflate-raw');
+  const writer = stream.writable.getWriter();
+  writer.write(new Uint8Array(data));
+  writer.close();
+  const chunks: Uint8Array[] = [];
+  const reader = stream.readable.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  const out = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
+  let offset = 0;
+  for (const chunk of chunks) { out.set(chunk, offset); offset += chunk.length; }
+  return out;
+}
+
+function toBase64(bytes: Uint8Array): string {
+  return btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(''));
+}
+
+function fromBase64(b64: string): Uint8Array {
+  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+}
+
+// --- Public API ---
+
+export async function encode(payload: SharePayload): Promise<string> {
   const colorIndex = COLOR_LIST.indexOf(payload.color);
   const compact: CompactPayloadV2 = {
     v: 2,
     n: payload.name,
-    c: colorIndex >= 0 ? colorIndex : 1, // default to blue
+    c: colorIndex >= 0 ? colorIndex : 1,
     t: payload.tabs.map((tab) => tab.url),
   };
-  const json = JSON.stringify(compact);
-  const bytes = new TextEncoder().encode(json);
-  const latin1 = Array.from(bytes, (b) => String.fromCharCode(b)).join('');
-  return SHARE_PREFIX + btoa(latin1);
+  const bytes = new TextEncoder().encode(JSON.stringify(compact));
+  const compressed = await compress(bytes);
+  return SHARE_PREFIX + toBase64(compressed);
 }
 
-export function decode(shareCode: string): SharePayload {
+export async function decode(shareCode: string): Promise<SharePayload> {
   const trimmed = shareCode.trim();
 
   if (!trimmed.startsWith(SHARE_PREFIX)) {
     throw new Error('Invalid share code: missing "tgs:" prefix.');
   }
 
-  const base64 = trimmed.slice(SHARE_PREFIX.length);
-
-  let json: string;
+  const b64 = trimmed.slice(SHARE_PREFIX.length);
+  let bytes: Uint8Array;
   try {
-    const latin1 = atob(base64);
-    const bytes = Uint8Array.from(latin1, (c) => c.charCodeAt(0));
-    json = new TextDecoder().decode(bytes);
+    bytes = fromBase64(b64);
   } catch {
     throw new Error('Invalid share code: could not decode base64 data.');
+  }
+
+  // Try decompressed first (v3), fall back to raw (v1/v2)
+  let json: string;
+  try {
+    const decompressed = await decompress(bytes);
+    json = new TextDecoder().decode(decompressed);
+  } catch {
+    json = new TextDecoder().decode(bytes);
   }
 
   let raw: unknown;
   try {
     raw = JSON.parse(json);
   } catch {
-    throw new Error('Invalid share code: malformed JSON data.');
+    throw new Error('Invalid share code: malformed data.');
   }
 
-  // Try v2 first, then v1
-  if (isValidV2(raw)) {
-    return normalizeV2(raw);
-  }
-  if (isValidV1(raw)) {
-    return normalizeV1(raw);
-  }
+  if (isValidV2(raw)) return normalizeV2(raw);
+  if (isValidV1(raw)) return normalizeV1(raw);
 
   throw new Error('Invalid share code: unexpected data format.');
 }
+
+// --- Validators ---
 
 function isValidV2(data: unknown): data is CompactPayloadV2 {
   if (typeof data !== 'object' || data === null) return false;
@@ -100,6 +149,8 @@ function isValidV1(data: unknown): data is RawPayloadV1 {
     )
   );
 }
+
+// --- Normalizers ---
 
 function normalizeV2(raw: CompactPayloadV2): SharePayload {
   return {

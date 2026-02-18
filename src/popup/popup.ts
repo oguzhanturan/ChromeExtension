@@ -144,7 +144,7 @@ function extractDomain(url: string): string {
 }
 
 // Share Flow
-function handleShare(group: DisplayTabGroup): void {
+async function handleShare(group: DisplayTabGroup): Promise<void> {
   const payload = buildSharePayload(group);
 
   if (payload.tabs.length === 0) {
@@ -152,7 +152,7 @@ function handleShare(group: DisplayTabGroup): void {
     return;
   }
 
-  const code = encode(payload);
+  const code = await encode(payload);
   shareOutput.value = code;
 
   // Render chip in overlay
@@ -188,14 +188,14 @@ closeBtn.addEventListener('click', () => {
 });
 
 // Import Flow
-importInput.addEventListener('input', () => {
+importInput.addEventListener('input', async () => {
   const code = importInput.value.trim();
   if (!code) {
     importPreview.hidden = true;
     return;
   }
   try {
-    const payload = decode(code);
+    const payload = await decode(code);
     // Show preview chip
     importPreview.hidden = false;
     importPreview.innerHTML = '';
@@ -234,9 +234,9 @@ importBtn.addEventListener('click', async () => {
     return;
   }
 
-  let payload: ReturnType<typeof decode>;
+  let payload: Awaited<ReturnType<typeof decode>>;
   try {
-    payload = decode(code);
+    payload = await decode(code);
   } catch (err) {
     showToast(err instanceof Error ? err.message : 'Invalid share code.', 'error');
     return;

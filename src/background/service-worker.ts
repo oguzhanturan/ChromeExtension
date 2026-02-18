@@ -1,5 +1,5 @@
-import { SharePayload } from '../types/tab-group';
 import { encode } from '../utils/codec';
+import { buildSharePayload } from '../utils/tab-group-service';
 const CONTEXT_MENU_ID = 'share-tab-group';
 
 // --- Context Menu Setup ---
@@ -54,23 +54,24 @@ async function shareTabGroup(tab: chrome.tabs.Tab): Promise<void> {
       currentWindow: true,
     });
 
-    const shareableTabs = groupTabs
-      .filter((t) => t.url && (t.url.startsWith('http://') || t.url.startsWith('https://')))
-      .map((t) => ({ url: t.url!, title: t.title || '' }));
+    const displayGroup = {
+      id: groupId,
+      title: group.title || '(Untitled)',
+      color: group.color,
+      tabCount: groupTabs.length,
+      tabs: groupTabs
+        .filter((t) => t.url)
+        .map((t) => ({ url: t.url!, title: t.title || '' })),
+    };
 
-    if (shareableTabs.length === 0) {
+    const payload = buildSharePayload(displayGroup);
+
+    if (payload.tabs.length === 0) {
       showBadge('!', '#D93025');
       return;
     }
 
-    const payload: SharePayload = {
-      version: 1,
-      name: group.title || '(Untitled)',
-      color: group.color,
-      tabs: shareableTabs,
-    };
-
-    const code = encode(payload);
+    const code = await encode(payload);
     const copied = await copyToClipboard(code);
     if (copied) {
       showBadge('OK', '#188038');
