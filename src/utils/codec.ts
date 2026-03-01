@@ -64,17 +64,45 @@ function fromBase64(b64: string): Uint8Array {
   return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 }
 
+// --- URL Shrinker ---
+function shrinkUrl(url: string): string {
+  try {
+    const obj = new URL(url);
+    const removeParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'ref'];
+    removeParams.forEach(p => obj.searchParams.delete(p));
+    let res = obj.toString();
+    res = res.replace(/^https?:\/\//, ''); // strip protocol
+    res = res.replace(/^www\./, '');       // strip www
+    return res.replace(/\|/g, '%7C');      // escape delimiter
+  } catch {
+    return url.replace(/\|/g, '%7C');
+  }
+}
+
+function expandUrl(url: string): string {
+  const unescaped = url.replace(/%7C/g, '|'); // unescape delimiter
+  if (unescaped.startsWith('chrome://') || unescaped.startsWith('chrome-extension://') || unescaped.startsWith('http://') || unescaped.startsWith('https://')) {
+    return unescaped;
+  }
+  return 'https://' + unescaped;
+}
+
 // --- Public API ---
 
 export async function encode(payload: SharePayload): Promise<string> {
   const colorIndex = COLOR_LIST.indexOf(payload.color);
-  const compact: CompactPayloadV2 = {
-    v: 2,
-    n: payload.name,
-    c: colorIndex >= 0 ? colorIndex : 1,
-    t: payload.tabs.map((tab) => tab.url),
-  };
-  const bytes = new TextEncoder().encode(JSON.stringify(compact));
+  const color = colorIndex >= 0 ? colorIndex : 1;
+  const name = payload.name.replace(/\|/g, '%7C'); // escape delimiter
+
+  // V3 custom delimiter format: 3|colorIndex|name|url1|url2...
+  const parts = [
+    '3',
+    color.toString(),
+    name,
+    ...payload.tabs.map((tab) => shrinkUrl(tab.url)),
+  ];
+
+  const bytes = new TextEncoder().encode(parts.join('|'));
   const compressed = await compress(bytes);
   return SHARE_PREFIX + toBase64(compressed);
 }
@@ -101,6 +129,22 @@ export async function decode(shareCode: string): Promise<SharePayload> {
     json = new TextDecoder().decode(decompressed);
   } catch {
     json = new TextDecoder().decode(bytes);
+  }
+
+  // --- Check V3 custom delimited format ---
+  if (json.startsWith('3|')) {
+    const parts = json.split('|');
+    if (parts.length >= 3) {
+      const c = parseInt(parts[1], 10);
+      const colorIndex = (c >= 0 && c < COLOR_LIST.length) ? c : 1;
+
+      return {
+        version: 3,
+        name: parts[2].replace(/%7C/g, '|'),
+        color: COLOR_LIST[colorIndex],
+        tabs: parts.slice(3).map((url) => ({ url: expandUrl(url), title: '' })),
+      };
+    }
   }
 
   let raw: unknown;

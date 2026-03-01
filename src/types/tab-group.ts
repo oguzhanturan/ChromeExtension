@@ -4,7 +4,7 @@ export interface SharedTab {
 }
 
 export interface SharePayload {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   name: string;
   color: chrome.tabGroups.ColorEnum;
   tabs: SharedTab[];
