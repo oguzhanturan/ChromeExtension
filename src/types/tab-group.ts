@@ -34,3 +34,62 @@ export const TAB_GROUP_COLOR_MAP: Record<chrome.tabGroups.ColorEnum, string> = {
   cyan: '#007B83',
   orange: '#FA903E',
 };
+
+// === History Feature ===
+export interface ClosedTabGroup {
+  id: string;                          // UUID
+  title: string;
+  color: chrome.tabGroups.ColorEnum;
+  tabs: SharedTab[];
+  closedAt: number;                    // Unix timestamp
+}
+
+// === Labels/Categories Feature ===
+export interface GroupLabel {
+  id: string;
+  name: string;
+  color: string;                       // Hex color
+}
+
+export interface GroupLabelAssignment {
+  groupId: number;
+  labelIds: string[];
+}
+
+// === Archive Feature ===
+export interface ArchivedTabGroup {
+  id: string;                          // UUID
+  title: string;
+  color: chrome.tabGroups.ColorEnum;
+  tabs: SharedTab[];
+  archivedAt: number;                  // Unix timestamp
+}
+
+// === Auto-Add Feature ===
+export interface AutoAddConfig {
+  enabled: boolean;
+  targetGroupId: number | null;
+  targetGroupTitle: string;
+  targetGroupColor: chrome.tabGroups.ColorEnum;
+  includeNewTabs: boolean;
+  includeMovedTabs: boolean;
+}
+
+// === Settings ===
+export interface ExtensionSettings {
+  historyRetentionDays: number;        // Default: 7
+  maxHistoryItems: number;             // Default: 50
+}
+
+// === Custom Order ===
+export interface GroupOrderConfig {
+  windowId: number;
+  order: number[];                     // Array of Chrome group IDs
+}
+
+// === Enhanced Display (with metadata) ===
+export interface EnhancedDisplayTabGroup extends DisplayTabGroup {
+  isPrivate: boolean;
+  isFavorite: boolean;
+  labels: GroupLabel[];
+}

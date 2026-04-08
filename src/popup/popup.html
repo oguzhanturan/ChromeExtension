@@ -21,6 +21,13 @@
       <div class="nav-segment">
         <button class="nav-btn nav-btn--active" data-view="share">Share</button>
         <button class="nav-btn" data-view="import">Import</button>
+        <button class="nav-btn" data-view="history">History</button>
+        <button class="nav-btn" data-view="archive">Archive</button>
+        <button class="nav-btn" data-view="settings">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -50,6 +57,70 @@
       ></textarea>
       <div id="import-preview" class="import-preview" hidden></div>
       <button id="import-btn" class="btn btn--primary btn--full">Import Tab Group</button>
+    </section>
+
+    <section id="view-history" class="view" hidden>
+      <div class="view-header">
+        <span class="view-header__title">Recently Closed</span>
+        <button id="clear-history-btn" class="btn btn--text btn--small">Clear All</button>
+      </div>
+      <div id="history-list" class="history-list"></div>
+      <div id="history-empty" class="empty-state" hidden>
+        <p>No recently closed groups.</p>
+        <p class="empty-state__hint">Closed tab groups will appear here for 7 days.</p>
+      </div>
+    </section>
+
+    <section id="view-archive" class="view" hidden>
+      <div class="view-header">
+        <span class="view-header__title">Archived Groups</span>
+      </div>
+      <div id="archive-list" class="archive-list"></div>
+      <div id="archive-empty" class="empty-state" hidden>
+        <p>No archived groups.</p>
+        <p class="empty-state__hint">Archive tab groups to save them for later.</p>
+      </div>
+    </section>
+
+    <section id="view-settings" class="view" hidden>
+      <div class="view-header">
+        <span class="view-header__title">Settings</span>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-section__title">Auto-add Tabs</h3>
+        <p class="settings-section__desc">Automatically add new tabs to a target group.</p>
+
+        <div class="settings-row">
+          <label class="toggle-label">
+            <input type="checkbox" id="autoAdd-enabled" class="toggle-input" />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Enable auto-add</span>
+          </label>
+        </div>
+
+        <div class="settings-row">
+          <label class="settings-label">Target Group</label>
+          <select id="autoAdd-target" class="settings-select">
+            <option value="">Select a group...</option>
+          </select>
+        </div>
+
+        <div class="settings-row">
+          <label class="toggle-label">
+            <input type="checkbox" id="autoAdd-newTabs" class="toggle-input" />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Include new tabs</span>
+          </label>
+        </div>
+
+        <div class="settings-row">
+          <label class="toggle-label">
+            <input type="checkbox" id="autoAdd-movedTabs" class="toggle-input" />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Include ungrouped tabs</span>
+          </label>
+        </div>
+      </div>
     </section>
 
     <section id="share-result" class="share-result" hidden>
